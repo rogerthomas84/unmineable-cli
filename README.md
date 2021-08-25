@@ -106,6 +106,8 @@ Short output command (using `unmineable-cli -short` as the command)
 Polling a short output command (using `unmineable-cli -short -poll 10` as the command)
 
 ```shell
+# These figures are just an example ¯\_(ツ)_/¯
 2021-08-25 12:44:51: 2.10546189
 2021-08-25 12:45:01: 2.13447433
+2021-08-25 12:47:21: 2.19934691
 ```
