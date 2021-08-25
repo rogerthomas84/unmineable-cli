@@ -226,5 +226,4 @@ def run_unmineable():
 
 
 if __name__ == '__main__':
-    # Main
     run_unmineable()
