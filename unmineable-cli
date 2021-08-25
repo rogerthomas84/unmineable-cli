@@ -190,6 +190,7 @@ def run_unmineable():
         unmineable_data("          Balance:", "%s" % target['balance'])
         unmineable_data("  Balance payable:", "%s" % target['balance_payable'])
         unmineable_data("Payment threshold:", "%s" % target['payment_threshold'])
+        unmineable_data("      Data source:", "https://%s%s" % (API_BASE_URL, API_PATH % (wallet, coin)))
         if target['address'] != wallet:
             unmineable_data_error("            Error: WALLET ADDRESS DOES NOT MATCH!")
             unmineable_data_error("          Address:", "%s" % target['address'])
@@ -203,9 +204,6 @@ def run_unmineable():
                     unmineable_error("Errors:")
                     output_error = True
                 unmineable_error(" - %s was true!" % err_k)
-        unmineable_green("")
-        unmineable_green("Source: https://%s%s" % (API_BASE_URL, API_PATH % (wallet, coin)))
-        unmineable_green("")
         unmineable_green("---------------------------------------------------------------------")
         unmineable_green("| If you found this useful, why not buy me a coffee with some DOGE? |")
         unmineable_green("| Send some DOGE my way! My wallet address is:                      |")
