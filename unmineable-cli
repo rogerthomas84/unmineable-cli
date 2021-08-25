@@ -1,0 +1,230 @@
+#!/usr/bin/env python3
+
+import http.client
+import json
+import os
+import pathlib
+import socket
+import argparse
+
+
+CACHE_DIR = "%s/.unmineable-cli" % os.getenv('HOME')
+CACHE_PATH = "%s/.cache" % CACHE_DIR
+API_BASE_URL = "api.unminable.com"
+API_PATH = "/v4/address/%s?coin=%s"
+
+cli_path = pathlib.Path(CACHE_DIR)
+if cli_path.exists() is False:
+    os.makedirs(CACHE_DIR)
+elif cli_path.exists() is True and cli_path.is_dir() is False:
+    print("Error. The path of %s must be a writable directory." % CACHE_DIR)
+    exit(1)
+
+
+class BashColors:
+    BLUE = '\033[94m'
+    CYAN = '\033[96m'
+    GREEN = '\033[92m'
+    ERROR = '\033[91m'
+    END_COLOUR = '\033[0m'
+    FONT_WEIGHT_BOLD = '\033[1m'
+
+
+def remove_cache_data():
+    if pathlib.Path(CACHE_PATH).exists() is True:
+        pathlib.Path(CACHE_PATH).unlink()
+
+
+def write_cache(data):
+    open(CACHE_PATH, 'w').write(json.dumps(data))
+    return data
+
+
+def get_cache_data():
+    if pathlib.Path(CACHE_PATH).exists() is False:
+        return None
+    data = open(CACHE_PATH, 'r').read()
+    # noinspection PyBroadException
+    try:
+        result = json.loads(data)
+        if type(result) == dict:
+            if 'wallet' in result.keys() and 'coin' in result.keys():
+                return result
+        remove_cache_data()
+    except Exception:
+        pass
+    return None
+
+
+def unmineable_error(msg):
+    print(f"{BashColors.ERROR}%s{BashColors.END_COLOUR}" % msg)
+
+
+def unmineable_green(msg):
+    print(f"{BashColors.GREEN}%s{BashColors.END_COLOUR}" % msg)
+
+
+def unmineable_data(key, value=None):
+    if value is None:
+        print(f"{BashColors.BLUE}%s{BashColors.END_COLOUR}" % key)
+    else:
+        print(f"{BashColors.BLUE}%s{BashColors.END_COLOUR} {BashColors.CYAN}%s{BashColors.END_COLOUR}" % (key, value))
+
+
+def unmineable_data_error(key, value=None):
+    if value is None:
+        print(f"{BashColors.ERROR}%s{BashColors.END_COLOUR}" % key)
+    else:
+        print(f"{BashColors.ERROR}%s{BashColors.END_COLOUR} {BashColors.ERROR}%s{BashColors.END_COLOUR}" % (key, value))
+
+
+def run_unmineable():
+    parser = argparse.ArgumentParser(
+        description='Check the balances of unmineable. All arguments are optional'
+    )
+    parser.add_argument(
+        '-coin',
+        help='force use a specific coin (optional, otherwise use a cached version)',
+        dest='coin',
+        type=str,
+        default=None
+    )
+    parser.add_argument(
+        '-wallet',
+        help='the wallet address (optional, otherwise use a cached version)',
+        dest='wallet',
+        type=str,
+        default=None
+    )
+    parser.add_argument(
+        '-short',
+        help='output just the balance payable (total pending payable balance)',
+        default=False,
+        action='store_true'
+    )
+    parser.add_argument(
+        '-rm',
+        help='remove the cache file',
+        default=False,
+        action='store_true'
+    )
+    parser.set_defaults(rm=False, coin=None, wallet=None, short=False)
+    args = parser.parse_args()
+
+    if args.rm is True:
+        remove_cache_data()
+        unmineable_green("Removed cache file at location: %s" % CACHE_PATH)
+        exit(0)
+
+    if (args.coin is not None and args.wallet is None) or (args.coin is None and args.wallet is not None):
+        unmineable_error("If providing -coin or -wallet, both must be provided.")
+        exit(1)
+
+    using_arguments = False
+    if args.coin is not None and args.wallet is not None:
+        using_arguments = True
+
+    cache = get_cache_data()
+    if cache is None:
+        if args.wallet is None:
+            wallet = input("Please enter the wallet address : ")
+        else:
+            wallet = args.wallet
+        if wallet is None or len(wallet) == 0:
+            unmineable_error("You entered an invalid wallet address.")
+            exit(1)
+
+        if args.coin is None:
+            coin = input("Please enter the coin, for example DOGE : ")
+        else:
+            coin = args.coin
+        if coin is None or len(coin) == 0:
+            unmineable_error("You entered an invalid coin")
+            exit(1)
+        if args.coin is None and args.wallet is None:
+            cache = write_cache({"coin": coin, "wallet": wallet})
+    else:
+        if args.coin is not None:
+            coin = args.coin
+        else:
+            coin = cache['coin']
+        if args.wallet is not None:
+            wallet = args.wallet
+        else:
+            wallet = cache['wallet']
+
+    try:
+        connection = http.client.HTTPSConnection(API_BASE_URL)
+        connection.request('GET', API_PATH % (wallet, coin))
+        body = connection.getresponse().read()
+        decoded = json.loads(body)
+        if type(decoded) != dict or 'data' not in decoded.keys():
+            unmineable_error("error with response. key 'data' was missing.")
+            unmineable_error(body)
+            exit(1)
+        if type(decoded['data']) != dict:
+            unmineable_error("error with response. key 'data' was not a dict.")
+            unmineable_error(body)
+            exit(1)
+        if 'success' not in decoded.keys() or decoded['success'] is not True:
+            unmineable_error("'success' key was not true!")
+            unmineable_error(decoded)
+            exit(1)
+        target = decoded['data']
+        required_keys = ['balance', 'balance_payable', 'payment_threshold', 'address', 'err_flags']
+        for k in required_keys:
+            if k not in target.keys():
+                unmineable_error("error with response. key '%s' was missing." % k)
+                unmineable_error(target)
+                exit(1)
+
+        if args.short is True:
+            print(target['balance_payable'])
+            exit(0)
+
+        if using_arguments is True:
+            unmineable_data("----")
+            unmineable_error("Using manually provided coin and wallet.")
+        unmineable_data("----")
+        unmineable_data("      Target coin:", "%s" % cache['coin'])
+        unmineable_data("          Balance:", "%s" % target['balance'])
+        unmineable_data("  Balance payable:", "%s" % target['balance_payable'])
+        unmineable_data("Payment threshold:", "%s" % target['payment_threshold'])
+        if target['address'] != wallet:
+            unmineable_data_error("            Error: WALLET ADDRESS DOES NOT MATCH!")
+            unmineable_data_error("          Address:", "%s" % target['address'])
+        else:
+            unmineable_data("          Address:", "%s" % target['address'])
+        error_data = target['err_flags']
+        output_error = False
+        for err_k in error_data.keys():
+            if error_data[err_k] is True:
+                if output_error is False:
+                    unmineable_error("Errors:")
+                    output_error = True
+                unmineable_error(" - %s was true!" % err_k)
+        unmineable_green("")
+        unmineable_green("---------------------------------------------------------------------")
+        unmineable_green("| If you found this useful, why not buy me a coffee with some DOGE? |")
+        unmineable_green("| Send some DOGE my way! My wallet address is:                      |")
+        unmineable_green("|              DDSDz9bkcD3qcfu7KnSmmfgPYvLUsCb1nR                   |")
+        unmineable_green("---------------------------------------------------------------------")
+        exit(0)
+
+    except socket.gaierror as e:
+        unmineable_error("socket.gaierror raised while requesting unmineable api at address: %s" % API_BASE_URL)
+        unmineable_error("error: %s" % e)
+        unmineable_error("--")
+        unmineable_error("Run 'unmineable-cli -rm' to remove the locally cached wallet and coin information.")
+        exit(1)
+    except Exception as e:
+        unmineable_error("%s: raised while requesting unmineable api at address: %s" % (e.__class__, API_BASE_URL))
+        unmineable_error("error: %s" % e)
+        unmineable_error("--")
+        unmineable_error("Run 'unmineable-cli -rm' to remove the locally cached wallet and coin information.")
+        exit(1)
+
+
+if __name__ == '__main__':
+    # Main
+    run_unmineable()
