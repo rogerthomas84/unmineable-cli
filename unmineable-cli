@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-
+import datetime
 import http.client
 import json
 import os
 import pathlib
 import socket
 import argparse
-
+import time
 
 CACHE_DIR = "%s/.unmineable-cli" % os.getenv('HOME')
 CACHE_PATH = "%s/.cache" % CACHE_DIR
 API_BASE_URL = "api.unminable.com"
 API_PATH = "/v4/address/%s?coin=%s"
+START_BALANCE = None
 
 cli_path = pathlib.Path(CACHE_DIR)
 if cli_path.exists() is False:
@@ -78,39 +79,8 @@ def unmineable_data_error(key, value=None):
         print(f"{BashColors.ERROR}%s{BashColors.END_COLOUR} {BashColors.ERROR}%s{BashColors.END_COLOUR}" % (key, value))
 
 
-def run_unmineable():
-    parser = argparse.ArgumentParser(
-        description='Check the balances of unmineable. All arguments are optional'
-    )
-    parser.add_argument(
-        '-coin',
-        help='force use a specific coin (optional, otherwise use a cached version)',
-        dest='coin',
-        type=str,
-        default=None
-    )
-    parser.add_argument(
-        '-wallet',
-        help='the wallet address (optional, otherwise use a cached version)',
-        dest='wallet',
-        type=str,
-        default=None
-    )
-    parser.add_argument(
-        '-short',
-        help='output just the balance payable (total pending payable balance)',
-        default=False,
-        action='store_true'
-    )
-    parser.add_argument(
-        '-rm',
-        help='remove the cache file',
-        default=False,
-        action='store_true'
-    )
-    parser.set_defaults(rm=False, coin=None, wallet=None, short=False)
-    args = parser.parse_args()
-
+def run_unmineable(args):
+    global START_BALANCE
     if args.rm is True:
         remove_cache_data()
         unmineable_green("Removed cache file at location: %s" % CACHE_PATH)
@@ -179,6 +149,13 @@ def run_unmineable():
                 exit(1)
 
         if args.short is True:
+            if args.poll is not None:
+                date_now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                if target['balance_payable'] != START_BALANCE:
+                    unmineable_data("%s:" % date_now, target['balance_payable'])
+                    START_BALANCE = target['balance_payable']
+                time.sleep(args.poll)
+                return run_unmineable(args=args)
             print(target['balance_payable'])
             exit(0)
 
@@ -209,6 +186,9 @@ def run_unmineable():
         unmineable_green("| Send some DOGE my way! My wallet address is:                      |")
         unmineable_green("|              DDSDz9bkcD3qcfu7KnSmmfgPYvLUsCb1nR                   |")
         unmineable_green("---------------------------------------------------------------------")
+        if args.poll is not None:
+            time.sleep(args.poll)
+            return run_unmineable(args=args)
         exit(0)
 
     except socket.gaierror as e:
@@ -226,4 +206,42 @@ def run_unmineable():
 
 
 if __name__ == '__main__':
-    run_unmineable()
+    parser = argparse.ArgumentParser(
+        description='Check the balances of unmineable. All arguments are optional'
+    )
+    parser.add_argument(
+        '-coin',
+        help='force use a specific coin (optional, otherwise use a cached version)',
+        dest='coin',
+        type=str,
+        default=None
+    )
+    parser.add_argument(
+        '-wallet',
+        help='the wallet address (optional, otherwise use a cached version)',
+        dest='wallet',
+        type=str,
+        default=None
+    )
+    parser.add_argument(
+        '-short',
+        help='output just the balance payable (total pending payable balance)',
+        default=False,
+        action='store_true'
+    )
+    parser.add_argument(
+        '-poll',
+        help='poll the balance every X seconds',
+        default=None,
+        type=int,
+        dest='poll'
+    )
+    parser.add_argument(
+        '-rm',
+        help='remove the cache file',
+        default=False,
+        action='store_true'
+    )
+    parser.set_defaults(rm=False, coin=None, wallet=None, short=False)
+    args = parser.parse_args()
+    run_unmineable(args=args)

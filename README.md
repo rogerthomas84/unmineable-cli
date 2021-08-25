@@ -45,10 +45,14 @@ query and these will be cached in your home directory in `~/.unmineable-cli/.cac
 Alternatively you can provide the `-wallet` and `-coin` arguments to manually specify the coin and wallet. Doing so will
 not cache the details.
 
-Additionally, you can provide the `-short` flag to just output the balance payable (see: [unmineable-api](https://github.com/unMineableDev/unmineable-api#get--addressaddresscoincoin) for more information on this)
+Providing the `-short` flag will cause the app to just output the balance payable (see: [unmineable-api](https://github.com/unMineableDev/unmineable-api#get--addressaddresscoincoin) for more information on this)
+
+Passing the `-poll` argument (with a number `-poll 10`) would cause the app to poll the API every seconds and output the
+data. In the case of using the `-short` flag alongside `-poll` the output would contain the datetime to the left of the
+balance, and this would only be output if the balance changed.
 
 ```shell
-usage: unmineable-cli [-h] [-coin COIN] [-wallet WALLET] [-short] [-rm]
+usage: unmineable-cli [-h] [-coin COIN] [-wallet WALLET] [-short] [-poll POLL] [-rm]
 
 Check the balances of unmineable. All arguments are optional
 
@@ -57,7 +61,9 @@ optional arguments:
   -coin COIN      force use a specific coin (optional, otherwise use a cached version)
   -wallet WALLET  the wallet address (optional, otherwise use a cached version)
   -short          output just the balance payable (total pending payable balance)
+  -poll POLL      poll the balance every X seconds
   -rm             remove the cache file
+
 ```
 
 ## Running examples:
@@ -95,4 +101,11 @@ Short output command (using `unmineable-cli -short` as the command)
 
 ```shell
 0.97700737
+```
+
+Polling a short output command (using `unmineable-cli -short -poll 10` as the command)
+
+```shell
+2021-08-25 12:44:51: 2.10546189
+2021-08-25 12:45:01: 2.13447433
 ```
