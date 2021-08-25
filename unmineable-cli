@@ -204,6 +204,8 @@ def run_unmineable():
                     output_error = True
                 unmineable_error(" - %s was true!" % err_k)
         unmineable_green("")
+        unmineable_green("Source: https://%s%s" % (API_BASE_URL, API_PATH % (wallet, coin)))
+        unmineable_green("")
         unmineable_green("---------------------------------------------------------------------")
         unmineable_green("| If you found this useful, why not buy me a coffee with some DOGE? |")
         unmineable_green("| Send some DOGE my way! My wallet address is:                      |")
