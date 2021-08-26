@@ -10,7 +10,19 @@ feel free to use my referral link. It helps me fund the time to make little help
 
 ### Quick install...
 
-For a quick and easy installation, run this next command. Alternatively, see the next section for a safer way.
+For a quick and easy installation, run this next command. Alternatively, see the next sections for other ways.
+
+```
+# Clone and install
+git clone git@github.com:rogerthomas84/unmineable-cli.git && cd unmineable-cli && ./setup.sh
+
+# Run the app...
+unmineable-cli
+```
+
+### Install without a clone...
+
+If you really don't want to clone the repository, you can run this...
 
 ```
 curl https://raw.githubusercontent.com/rogerthomas84/unmineable-cli/master/unmineable-cli > unmineable-cli \
