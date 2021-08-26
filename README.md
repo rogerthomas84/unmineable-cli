@@ -89,11 +89,10 @@ Full output command (using `unmineable-cli` as the command)
 Payment threshold: 30
           Address: DDSDz9bkcD3qcfu7KnSmmfgPYvLUsCb1nR
 
----------------------------------------------------------------------
-| If you found this useful, why not buy me a coffee with some DOGE? |
-|          Send some DOGE my way ;-) My wallet address is:          |
-|              DDSDz9bkcD3qcfu7KnSmmfgPYvLUsCb1nR                   |
----------------------------------------------------------------------
+----------------------------------------------------------------------
+| If you found this useful why not help me out by sending some DOGE? |
+| Wallet address: DDSDz9bkcD3qcfu7KnSmmfgPYvLUsCb1nR                 |
+----------------------------------------------------------------------
 
 ```
 
