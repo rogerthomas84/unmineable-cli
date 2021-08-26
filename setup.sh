@@ -16,4 +16,4 @@ chmod +x /usr/local/bin/unmineable-cli
 
 echo ""
 echo "Install complete"
-exit(0)
+exit 0

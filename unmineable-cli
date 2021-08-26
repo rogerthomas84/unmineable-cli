@@ -243,4 +243,8 @@ if __name__ == '__main__':
     )
     parser.set_defaults(rm=False, coin=None, wallet=None, short=False)
     args = parser.parse_args()
-    run_unmineable(args=args)
+    try:
+        run_unmineable(args=args)
+    except KeyboardInterrupt:
+        print("")
+        exit(0)
