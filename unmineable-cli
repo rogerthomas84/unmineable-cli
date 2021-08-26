@@ -181,11 +181,10 @@ def run_unmineable(args):
                     unmineable_error("Errors:")
                     output_error = True
                 unmineable_error(" - %s was true!" % err_k)
-        unmineable_green("---------------------------------------------------------------------")
-        unmineable_green("| If you found this useful, why not buy me a coffee with some DOGE? |")
-        unmineable_green("| Send some DOGE my way! My wallet address is:                      |")
-        unmineable_green("|              DDSDz9bkcD3qcfu7KnSmmfgPYvLUsCb1nR                   |")
-        unmineable_green("---------------------------------------------------------------------")
+        unmineable_green("----------------------------------------------------------------------")
+        unmineable_green("| If you found this useful why not help me out by sending some DOGE? |")
+        unmineable_green("| Wallet address: DDSDz9bkcD3qcfu7KnSmmfgPYvLUsCb1nR                 |")
+        unmineable_green("----------------------------------------------------------------------")
         if args.poll is not None:
             time.sleep(args.poll)
             return run_unmineable(args=args)
